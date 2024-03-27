@@ -1,0 +1,24 @@
+/* components/Card.module.css */
+
+.card {
+    width: 100px;
+    height: 150px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+   }
+   
+   .cardImage {
+    width: 80%;
+    height: 80%;
+   }
+   
+   .cardValue {
+    font-size: 18px;
+    font-weight: bold;
+   }
+   

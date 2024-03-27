@@ -1,33 +1,29 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Installations
+npx create-next-app@latest --typescript
+npm install axios
 
 ## Learn More
+Create a component Folder and add all the react components here.
+Card.tsx -> display individual cards
+Game.tsx ->  Manage the game state and logic
+Game.module.css-> CSS module for the Game component 
 
-To learn more about Next.js, take a look at the following resources:
+## API  API `https://deckofcardsapi.com/` 
+It is a web service that allows developers to interact with a deck of playing cards programmatically. It provides endpoints for creating, shuffling, drawing cards from, and managing decks of cards. Some of the key functionalities provided by this API include:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Creating a New Deck: You can create a new deck of cards, specifying parameters such as the number of decks to include and whether to include jokers.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+2. Shuffling a Deck: After creating a deck, you can shuffle it to randomize the order of cards.
+
+3. Drawing Cards: You can draw one or multiple cards from a deck. Drawing a card removes it from the deck.
+
+4. Deck Information: You can retrieve information about a deck, such as the remaining cards, shuffled status, and deck ID.
+
+5. Card Information: Get details about a specific card, including its value, suit, image URL, and code.
+
+The API is useful for building card games, simulations, or any application that requires card manipulation and management. It simplifies tasks related to handling decks of cards and provides a convenient way to integrate card-related functionalities into your applications.
 
 ## Deploy on Vercel
 

@@ -21,7 +21,7 @@ React, TypeScript, and Next.js were chosen for the Blackjack game project for se
 In summary, using React with TypeScript and Next.js provides a robust foundation for developing a dynamic and interactive game like Blackjack, combining the benefits of component-based UI development, static typing for code safety, and advanced features for web application architecture and performance.
 
 
-## API  `https://deckofcardsapi.com/` 
+## API ->  `https://deckofcardsapi.com/` 
 It is a web service that allows developers to interact with a deck of playing cards programmatically. It provides endpoints for creating, shuffling, drawing cards from, and managing decks of cards. Some of the key functionalities provided by this API include:
 
 1. Creating a New Deck: You can create a new deck of cards, specifying parameters such as the number of decks to include and whether to include jokers.

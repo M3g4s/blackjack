@@ -202,9 +202,9 @@ const Game: React.FC = () => {
         <div style={{ width: '30%'}}>
           <div style={{marginBottom:'100%'}}>
             <div>
-              <button onClick={startGame}>Start Game</button>
-              <button onClick={hit}>Hit</button>
-              <button onClick={stand}>Stand</button>
+              <button style={{marginRight:'3%'}} onClick={startGame}>Start Game</button>
+              <button style={{marginRight:'3%'}} onClick={hit}>Hit</button>
+              <button style={{marginRight:'3%'}} onClick={stand}>Stand</button>
             </div>
             <p>Your Hand ({playerTotal})</p>
             <div>

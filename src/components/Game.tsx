@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+const constantDeckID = '4mln5suc53ud'
+/*
+To satisfy this condition: 
+Don’t deal with a new deck every hand or rely on a refresh. 
+You should be able to run through the deck and shuffle at the end when needed.
+
+Use https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1 to get a deskId and replace above
+
+*/
+
 interface Card {
   value: string;
   suit: string;
@@ -17,7 +27,6 @@ interface GameState {
 }
 
 const Game: React.FC = () => {
-  console.error('Error starting test:');
   const [gameState, setGameState] = useState<GameState>({
     playerHand: [],
     houseHand: [],
@@ -25,7 +34,7 @@ const Game: React.FC = () => {
     houseTotal: 0,
     gameOver: false,
     message: '',
-    deckID: '4mln5suc53ud',
+    deckID: constantDeckID,
   });
 
   const [inputValue, setInputValue] = useState<number>(0);
@@ -42,7 +51,7 @@ const Game: React.FC = () => {
       const deckData = await deckResponse.json();
       const deckId = deckData.deck_id;
       const drawResponse = await fetch(
-        `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4` // Draw 4 cards to ensure enough for both player and house
+        `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4` // This API Shuffles and draws 4 cards to ensure enough for both player and house
       );
       const drawData = await drawResponse.json();
       const playerHand = drawData.cards.slice(0, 2).map((card: any) => ({
@@ -191,7 +200,7 @@ const Game: React.FC = () => {
     setInputValue(parseInt(event.target.value));
   };
 
-  const { playerHand, houseHand, playerTotal, houseTotal, gameOver, message, walletAmount } = gameState;
+  const { playerHand, houseHand, playerTotal, houseTotal, gameOver, message } = gameState;
 
   return (
     <div>

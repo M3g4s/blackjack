@@ -61,14 +61,14 @@ const Game: React.FC = () => {
       const deckData = await deckResponse.json();
       const deckId = deckData.deck_id;
       const drawResponse = await fetch(
-        `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4`
+        `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4` // Draw 4 cards to ensure enough for both player and house
       );
       const drawData = await drawResponse.json();
       const playerHand = drawData.cards.slice(0, 2).map((card: any) => ({
         ...card,
         image: card.image,
       }));
-      const houseHand = drawData.cards.slice(2).map((card: any) => ({
+      const houseHand = drawData.cards.slice(2, 4).map((card: any) => ({ // Slice only two cards for the house
         ...card,
         image: card.image,
       }));
@@ -88,6 +88,43 @@ const Game: React.FC = () => {
       console.error('Error starting game:', error);
     }
   };
+
+  
+  // const startGame = async () => {
+  //   try {
+  //     const deckResponse = await fetch(
+  //       'https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1'
+  //     );
+  //     const deckData = await deckResponse.json();
+  //     const deckId = deckData.deck_id;
+  //     const drawResponse = await fetch(
+  //       `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4`
+  //     );
+  //     const drawData = await drawResponse.json();
+  //     const playerHand = drawData.cards.slice(0, 2).map((card: any) => ({
+  //       ...card,
+  //       image: card.image,
+  //     }));
+  //     const houseHand = drawData.cards.slice(2).map((card: any) => ({
+  //       ...card,
+  //       image: card.image,
+  //     }));
+  //     const playerTotal = calculateTotal(playerHand);
+  //     const houseTotal = calculateTotal(houseHand);
+  //     setGameState({
+  //       playerHand,
+  //       houseHand,
+  //       playerTotal,
+  //       houseTotal,
+  //       gameOver: false,
+  //       message: '',
+  //       walletAmount: gameState.walletAmount,
+  //       deckID: gameState.deckID,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error starting game:', error);
+  //   }
+  // };
 
   const calculateTotal = (hand: Card[]) => {
     let total = 0;
@@ -146,28 +183,64 @@ const Game: React.FC = () => {
     if (!gameState.gameOver) {
       let { houseHand, houseTotal } = gameState;
       const playerTotal = gameState.playerTotal;
-
+  
+      if (houseHand.length === 2) { 
+        const winner = determineWinner(playerTotal, houseTotal);
+        const message = getWinnerMessage(winner);
+        setGameState((prevState) => ({ ...prevState, gameOver: true, message }));
+        return; 
+      }
+  
       const drawHouseCard = async () => {
         try {
           const newCard = await drawCard();
           houseHand.push(newCard);
           houseTotal = calculateTotal([...houseHand]);
-
-          if (houseTotal < 17) {
-            await drawHouseCard(); // Recursive call until house total >= 17
+  
+          if (houseHand.length < 2) { 
+            await drawHouseCard(); 
           } else {
             const winner = determineWinner(playerTotal, houseTotal);
             const message = getWinnerMessage(winner);
-            setGameState((prevState) => ({ ...prevState, houseHand, houseTotal, gameOver: true, message }));
+            setGameState((prevState) => ({ ...prevState, houseTotal, gameOver: true, message }));
           }
         } catch (error) {
           console.error('Error drawing card:', error);
         }
       };
-
+  
       await drawHouseCard(); // Start drawing cards for the house
     }
   };
+  
+  
+
+  // const stand = async () => {
+  //   if (!gameState.gameOver) {
+  //     let { houseHand, houseTotal } = gameState;
+  //     const playerTotal = gameState.playerTotal;
+
+  //     const drawHouseCard = async () => {
+  //       try {
+  //         const newCard = await drawCard();
+  //         houseHand.push(newCard);
+  //         houseTotal = calculateTotal([...houseHand]);
+
+  //         if (houseTotal < 17) {
+  //           await drawHouseCard(); // Recursive call until house total >= 17
+  //         } else {
+  //           const winner = determineWinner(playerTotal, houseTotal);
+  //           const message = getWinnerMessage(winner);
+  //           setGameState((prevState) => ({ ...prevState, houseHand, houseTotal, gameOver: true, message }));
+  //         }
+  //       } catch (error) {
+  //         console.error('Error drawing card:', error);
+  //       }
+  //     };
+
+  //     await drawHouseCard(); // Start drawing cards for the house
+  //   }
+  // };
 
   const drawCard = async () => {
     try {

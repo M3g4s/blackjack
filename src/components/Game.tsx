@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface Card {
   value: string;
   suit: string;
+  image: string; // Add image property
 }
 
 interface GameState {
@@ -12,11 +13,12 @@ interface GameState {
   houseTotal: number;
   gameOver: boolean;
   message: string;
-  walletAmount:number;
+  walletAmount: number;
+  deckID: string
 }
 
 const Game: React.FC = () => {
-    console.error('Error starting test:');
+  console.error('Error starting test:');
   const [gameState, setGameState] = useState<GameState>({
     playerHand: [],
     houseHand: [],
@@ -24,7 +26,8 @@ const Game: React.FC = () => {
     houseTotal: 0,
     gameOver: false,
     message: '',
-    walletAmount:100
+    walletAmount: 100,
+    deckID:'yuao6sy7n8z9'
   });
 
   const [inputValue, setInputValue] = useState<number>(0);
@@ -33,32 +36,42 @@ const Game: React.FC = () => {
     startGame();
   }, []);
 
-  const placeBet = async (betAmount:number) =>{
-      if(betAmount > walletAmount){
-          alert("insufficient wallet balance")
-      }else{
-        try{
-            const currentWalletAmount = gameState.walletAmount - betAmount;
-            setGameState((prevState) => ({
-              ...prevState, 
-              walletAmount: currentWalletAmount, 
-            }));
-  
-        }catch(error){
-          console.error('Error placing the bet', error);
-        }
+  const placeBet = async (betAmount: number) => {
+    const { walletAmount } = gameState;
+    if (betAmount > walletAmount) {
+      alert('Insufficient wallet balance');
+    } else {
+      try {
+        const currentWalletAmount = walletAmount - betAmount;
+        setGameState((prevState) => ({
+          ...prevState,
+          walletAmount: currentWalletAmount
+        }));
+      } catch (error) {
+        console.error('Error placing the bet', error);
       }
-  }
+    }
+  };
 
   const startGame = async () => {
     try {
-      const deckResponse = await fetch('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1');
+      const deckResponse = await fetch(
+        'https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1'
+      );
       const deckData = await deckResponse.json();
       const deckId = deckData.deck_id;
-      const drawResponse = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=4`);
+      const drawResponse = await fetch(
+        `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=3`
+      );
       const drawData = await drawResponse.json();
-      const playerHand = drawData.cards.slice(0, 2);
-      const houseHand = drawData.cards.slice(2);
+      const playerHand = drawData.cards.slice(0, 2).map((card: any) => ({
+        ...card,
+        image: card.image
+      }));
+      const houseHand = drawData.cards.slice(2).map((card: any) => ({
+        ...card,
+        image: card.image
+      }));
       const playerTotal = calculateTotal(playerHand);
       const houseTotal = calculateTotal(houseHand);
       setGameState({
@@ -68,18 +81,18 @@ const Game: React.FC = () => {
         houseTotal,
         gameOver: false,
         message: '',
-        walletAmount,
+        walletAmount: gameState.walletAmount,
+        deckID:gameState.deckID
       });
     } catch (error) {
       console.error('Error starting game:', error);
     }
   };
 
-
   const calculateTotal = (hand: Card[]) => {
     let total = 0;
     let hasAce = false;
-    hand.forEach(card => {
+    hand.forEach((card) => {
       if (card.value === 'ACE') {
         hasAce = true;
       }
@@ -104,14 +117,22 @@ const Game: React.FC = () => {
   const hit = async () => {
     if (!gameState.gameOver) {
       try {
-        const deckId = gameState.playerHand[0].code.slice(0, -1);
-        const drawResponse = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`);
+        const deckId = gameState.deckID;
+        const drawResponse = await fetch(
+          `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`
+        );
         const drawData = await drawResponse.json();
         const newCard = drawData.cards[0];
-        const playerHand = [...gameState.playerHand, newCard];
+        const playerHand = [...gameState.playerHand, { ...newCard, image: newCard.image }];
         const playerTotal = calculateTotal(playerHand);
         if (playerTotal > 21) {
-          setGameState({ ...gameState, playerHand, playerTotal, gameOver: true, message: 'BUST! You lose!' });
+          setGameState({
+            ...gameState,
+            playerHand,
+            playerTotal,
+            gameOver: true,
+            message: 'BUST! You lose!'
+          });
         } else {
           setGameState({ ...gameState, playerHand, playerTotal });
         }
@@ -120,34 +141,53 @@ const Game: React.FC = () => {
       }
     }
   };
+  
 
-  const stand = () => {
+  const stand = async () => {
     if (!gameState.gameOver) {
-      const { houseHand, houseTotal } = gameState;
+      let { houseHand, houseTotal } = gameState;
       const playerTotal = gameState.playerTotal;
-      while (houseTotal < 17) {
-        const newCard = drawCard();
-        houseHand.push(newCard);
-        const newTotal = calculateTotal([...houseHand]);
-        if (newTotal > 21) break;
-      }
-      const winner = determineWinner(playerTotal, houseTotal);
-      const message = getWinnerMessage(winner);
-      setGameState({ ...gameState, houseHand, houseTotal, gameOver: true, message });
+      
+      const drawHouseCard = async () => {
+        try {
+          const newCard = await drawCard();
+          houseHand.push(newCard);
+          houseTotal = calculateTotal([...houseHand]);
+  
+          if (houseTotal < 17) {
+            await drawHouseCard(); // Recursive call until house total >= 17
+          } else {
+            const winner = determineWinner(playerTotal, houseTotal);
+            const message = getWinnerMessage(winner);
+            setGameState(prevState => ({ ...prevState, houseHand, houseTotal, gameOver: true, message }));
+          }
+        } catch (error) {
+          console.error('Error drawing card:', error);
+        }
+      };
+  
+      await drawHouseCard(); // Start drawing cards for the house
     }
   };
+  
 
-  const drawCard = () => {
-    const deckId = gameState.houseHand[0].code.slice(0, -1);
-    // Assume the deck has enough cards for the game
-    // For a real application, handle deck exhaustion and reshuffling
-    // Here, just draw a random card from the deck
-    const cardValue = Math.floor(Math.random() * 13) + 1; // 1-13 for card value
-    const cardSuit = Math.floor(Math.random() * 4) + 1; // 1-4 for card suit
-    const value = cardValue > 10 ? ['JACK', 'QUEEN', 'KING'][cardValue - 11] : `${cardValue}`;
-    const suit = ['SPADES', 'DIAMONDS', 'CLUBS', 'HEARTS'][cardSuit - 1];
-    return { value, suit };
+  const drawCard = async () => {
+    try {
+      const deckId = gameState.deckID;
+      const drawResponse = await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`);
+      const drawData = await drawResponse.json();
+      const newCard = drawData.cards[0];
+      return { 
+        value: newCard.value, 
+        suit: newCard.suit, 
+        image: newCard.image 
+      };
+    } catch (error) {
+      console.error('Error drawing card:', error);
+      return null;
+    }
   };
+  
 
   const determineWinner = (playerTotal: number, houseTotal: number) => {
     if (playerTotal > 21) return 'house';
@@ -164,10 +204,10 @@ const Game: React.FC = () => {
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(parseInt(event.target.value));   
+    setInputValue(parseInt(event.target.value));
   };
 
-  const { playerHand, houseHand, playerTotal, houseTotal, gameOver, message,walletAmount } = gameState;
+  const { playerHand, houseHand, playerTotal, houseTotal, gameOver, message, walletAmount } = gameState;
 
   return (
     <div>
@@ -179,21 +219,21 @@ const Game: React.FC = () => {
       <p>Wallet $({walletAmount})</p>
       <input onChange={handleInputChange} /> 
       <button onClick={() => placeBet(inputValue)}>place bet</button>
-      <p>Your Hand({playerTotal})</p>
+      <p>Your Hand ({playerTotal})</p>
       <div>
         {playerHand.map((card, index) => (
-          <span key={index}>{`${card.value} of ${card.suit}, `}</span>
+          <img key={index} src={card.image} alt={`${card.value} of ${card.suit}`} style={{ width: '100px', marginRight: '5px' }} />
         ))}
       </div>
       <p>House Hand ({houseTotal})</p>
       <div>
         {houseHand.map((card, index) => (
-          <span key={index}>{`${card.value} of ${card.suit}, `}</span>
+          <img key={index} src={card.image} alt={`${card.value} of ${card.suit}`} style={{ width: '100px', marginRight: '5px' }} />
         ))}
       </div>
       {gameOver && <p>{message}</p>}
     </div>
   );
-};
+        }
 
-export default Game;
+        export default Game;
